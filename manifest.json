@@ -3,16 +3,31 @@
   "name": "Gmail Trusted Domain Login",
   "version": "1.0",
   "description": "Gmail Trusted Domain Login extension ensures only emails from a user-defined trusted domain can log in. Unauthorized attempts are blocked. A custom alert is displayed on the Gmail login page.",
-  "permissions": ["declarativeNetRequest", "storage", "tabs"],
-  "host_permissions": ["*://accounts.google.com/*"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "declarativeNetRequest",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://mail.google.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://accounts.google.com/*"],
-      "js": ["content.js"],
-      "css": ["custom-alert.css"],  
+      "matches": [
+        "https://accounts.google.com/*",
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "custom-alert.css"
+      ],
       "run_at": "document_end"
     }
   ],
