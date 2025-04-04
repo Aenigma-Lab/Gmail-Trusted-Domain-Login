@@ -7,12 +7,10 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            width: 280px;
+            padding: 15px;
             background-color: #f4f4f4;
-            padding: 20px;
-            width: 300px;
-            margin: 0 auto;
-            border-radius: 10px;
+            text-align: center;
         }
 
         .container {
@@ -27,50 +25,94 @@
             margin-top: 0;
         }
 
-        p {
-            color: #333;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
         .logo {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             margin-bottom: 10px;
         }
 
-        .alert {
-            color: red;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        input[type="text"] {
-            width: 100%;
+        input[type="text"], input[type="password"] {
+            width: calc(100% - 20px);
             padding: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
 
         button {
-            width: 100%;
-            padding: 10px;
+            width: 90%;
+            padding: 6px;
             background-color: #0073e6;
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 14px;
             cursor: pointer;
+            font-size: 14px;
         }
 
         button:hover {
             background-color: #005bb5;
         }
 
+        .alert {
+            color: red;
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
         .info-text {
             font-size: 12px;
             color: #777;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .remove-btn {
+            cursor: pointer;
+            color: red;
+            border: none;
+            background: none;
+            font-size: 14px;
+        }
+
+        .password-prompt {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .password-input {
+            padding: 8px;
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .password-button {
+            background-color: #0073e6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 6px 12px;
+        }
+
+        .password-button:hover {
+            background-color: #005bb5;
         }
     </style>
 </head>
@@ -79,11 +121,23 @@
         <img class="logo" src="icon.png" alt="Organization Logo">
         <h2>Trusted Organization Login</h2>
         <p>Enter the domain for your organization email address:</p>
-        <input type="text" id="trustedDomains" placeholder="e.g., example.com" />
-        <button id="saveButton">Save Trusted Domain</button>
+        <input type="text" id="domain-input" placeholder="e.g., example.com">
+        <button id="add-domain">Add Domain</button>
+
+        <h3>Allowed Domains</h3>
+        <ul id="domain-list"></ul>
+
         <p class="alert">Unauthorized email logins are blocked!</p>
         <p class="info-text">Only users with a valid email domain can access Gmail.</p>
+
+        <!-- Password Prompt for both Add and Remove actions -->
+        <div class="password-prompt" id="password-prompt">
+            <input type="password" id="password-input" class="password-input" placeholder="Enter password">
+            <button class="password-button" id="submit-password">Submit</button>
+        </div>
     </div>
+
+    <!-- Link to external JS file -->
     <script src="popup.js"></script>
 </body>
 </html>
