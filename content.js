@@ -28,127 +28,93 @@ function showCustomAlert(message) {
     });
   }
 
-  // Set the message and show the alert
   document.getElementById("alert-message").innerText = message;
-  alertContainer.style.display = "flex"; // Show the alert
+  alertContainer.style.display = "flex";
 }
 
-// Function to block unauthorized login based on trusted domains
+// Utility: Extract domain from email
+function getDomain(email) {
+  return email.split("@")[1] || "";
+}
+
+// Utility: Check if email matches trusted domain list
+function isTrustedDomain(email, trustedDomains) {
+  return trustedDomains.includes(getDomain(email));
+}
+
+// Sign out
+function signOutFromAllAccounts() {
+  console.log("🚨 Unauthorized login detected! Logging out...");
+  showCustomAlert("Unauthorized domain detected! Logging out...");
+  setTimeout(() => {
+    window.location.href = "https://accounts.google.com/Logout";
+  }, 3000);
+}
+
+// Block email input manually
 function blockUnauthorizedLogin(trustedDomains) {
   let emailInput = document.querySelector("input[type='email']");
-  
-  if (!emailInput) return; // Exit if email field is not found
-  
-  // Check if no domains are added
-  if (trustedDomains.length === 0) {
-    showCustomAlert("Please add at least one trusted domain before logging in.");
-    emailInput.setAttribute("disabled", "true"); // Disable the email input field
-    return;
-  }
+  if (!emailInput) return;
 
   emailInput.addEventListener("blur", function () {
     let enteredEmail = emailInput.value.trim();
-    const domain = enteredEmail.split('@')[1];
-
-    if (enteredEmail && trustedDomains.length > 0 && !trustedDomains.includes(domain)) {
-      showCustomAlert("Unauthorized email domain!");
-      emailInput.value = ""; // Clear the input field
+    if (enteredEmail && !isTrustedDomain(enteredEmail, trustedDomains)) {
+      showCustomAlert("Only trusted domains are allowed for login.");
+      emailInput.value = "";
     }
   });
 
   let nextButton = document.querySelector("button[type='button']");
-  
   if (nextButton) {
     nextButton.addEventListener("click", function (event) {
       let enteredEmail = emailInput.value.trim();
-      const domain = enteredEmail.split('@')[1];
-
-      if (enteredEmail && trustedDomains.length > 0 && !trustedDomains.includes(domain)) {
-        event.preventDefault(); // Block login attempt
-        showCustomAlert("Unauthorized email domain!");
+      if (enteredEmail && !isTrustedDomain(enteredEmail, trustedDomains)) {
+        event.preventDefault();
+        showCustomAlert("Only trusted domains are allowed for login.");
       }
     });
   }
 }
 
-// Fetch trusted domains from chrome storage and apply the login block
-chrome.storage.sync.get('trustedDomains', function(data) {
+// ❗️ New: Block or remove non-trusted accounts from chooser screen
+function filterAccountChooser(trustedDomains) {
+  const emailElements = document.querySelectorAll("div.IxcUte");
+  emailElements.forEach((el) => {
+    const email = el.textContent.trim();
+    const parent = el.closest("[role='link']"); // the clickable account row
+
+    if (!isTrustedDomain(email, trustedDomains)) {
+      console.log(`❌ Hiding unauthorized account: ${email}`);
+      showCustomAlert(`Blocked: ${email} is not allowed to login.`);
+
+      if (parent) {
+        parent.style.pointerEvents = "none";
+        parent.style.opacity = "0.5";
+        parent.title = "Blocked by Gmail Trusted Domain Login Extension";
+      }
+
+      // Optional: remove instead of hiding
+      // if (parent) parent.remove();
+    }
+  });
+}
+
+// Monitor and enforce on page load + mutations
+chrome.storage.sync.get("trustedDomains", function (data) {
   const trustedDomains = data.trustedDomains || [];
 
-  // Run function when login page is loaded
-  if (window.location.href.includes("accounts.google.com")) {
-    blockUnauthorizedLogin(trustedDomains);
-  }
-
-  // Observe URL changes to detect when login page appears
-  let observer = new MutationObserver(() => {
+  function runAllBlocks() {
     if (window.location.href.includes("accounts.google.com")) {
       blockUnauthorizedLogin(trustedDomains);
+      filterAccountChooser(trustedDomains);
     }
+  }
+
+  runAllBlocks();
+
+  const observer = new MutationObserver(() => {
+    runAllBlocks();
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
 });
-
-// Function to get the logged-in user's email domain
-function getLoggedInUserDomain() {
-  const userAvatar = document.querySelector('.gb_ya'); // User's avatar element
-  if (userAvatar) {
-    const userInfo = userAvatar.getAttribute('aria-label'); // The email or name of the logged-in user
-    if (userInfo) {
-      const email = userInfo.split(' ')[0]; // Get email from aria-label
-      const domain = email.split('@')[1]; // Extract domain from email
-      return domain;
-    }
-  }
-  return null;
-}
-
-// Function to sign out by redirecting to the logout URL
-function signOutFromAllAccounts() {
-  window.location.href = "https://accounts.google.com/Logout"; // Redirect to the Google logout page
-}
-
-// Function to continuously check if the logged-in account domain is valid
-function checkLoggedInAccount(domainToCheck) {
-  const currentDomain = getLoggedInUserDomain();
-  
-  // If no domain is defined in chrome storage, log the user out immediately
-  if (!domainToCheck) {
-    showCustomAlert("No trusted domain set. Logging out...");
-    signOutFromAllAccounts();
-    return;
-  }
-
-  // If the current logged-in domain does not match the trusted domain
-  if (currentDomain && currentDomain !== domainToCheck) {
-    console.log('Domain mismatch detected. Redirecting to sign-out...');
-    signOutFromAllAccounts();
-  } else {
-    console.log('Logged-in account domain matches. Continuing...');
-  }
-}
-
-// Continuously monitor the Gmail login page and perform checks
-function monitorLogin() {
-  // Periodically check the account status
-  setInterval(() => {
-    chrome.storage.sync.get('trustedDomains', function(data) {
-      const trustedDomains = data.trustedDomains || [];
-      
-      // If no trusted domains are set, sign out immediately
-      if (trustedDomains.length === 0) {
-        showCustomAlert("No trusted domain set. Logging out...");
-        signOutFromAllAccounts();
-      } else {
-        // Otherwise, check if the logged-in account matches the user-defined domain
-        checkLoggedInAccount(trustedDomains[0]); // Check the first trusted domain
-      }
-    });
-  }, 5000); // Check every 5 seconds or adjust as needed
-}
-
-// Run this when the Gmail page is loaded
-if (window.location.href.includes("mail.google.com") || window.location.href.includes("accounts.google.com")) {
-  monitorLogin();
-}
