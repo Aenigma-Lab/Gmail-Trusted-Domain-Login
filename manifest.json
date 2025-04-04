@@ -2,40 +2,46 @@
   "manifest_version": 3,
   "name": "Gmail Trusted Domain Login",
   "version": "1.0",
-  "description": "Gmail Trusted Domain Login extension ensures only emails from a user-defined trusted domain can log in. Unauthorized attempts are blocked. A custom alert is displayed on the Gmail login page.",
-  "permissions": ["declarativeNetRequest", "storage", "tabs"],
-  "host_permissions": ["*://accounts.google.com/*"],
+  "description": "Restrict Gmail logins to trusted domains only. Unauthorized emails are blocked with custom alerts.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://mail.google.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://accounts.google.com/*"],
+      "matches": [
+        "https://accounts.google.com/*",
+        "https://mail.google.com/*"
+      ],
       "js": ["content.js"],
-      "css": ["custom-alert.css"],  
+      "css": ["custom-alert.css"],
       "run_at": "document_end"
     }
   ],
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "block_gmail",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
   "action": {
     "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
-    }
+    "default_icon": "icon.png"
   },
   "icons": {
     "16": "icon.png",
     "48": "icon.png",
     "128": "icon.png"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules_block_gmail",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
   }
 }
