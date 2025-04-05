@@ -17,7 +17,12 @@ document.addEventListener("DOMContentLoaded", function () {
   
             domains.forEach((domain, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = `${domain} <button class="remove-btn" data-index="${index}">❌</button>`;
+                li.innerHTML = `
+                    <span>${domain}</span>
+                    <button class="remove-btn" data-index="${index}" title="Remove">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
                 domainList.appendChild(li);
             });
   
